@@ -1,0 +1,25 @@
+name: LookGround heartbeat
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Weather + ops
+        env:
+          BASE: ${{ secrets.LOOKGROUND_PUBLIC_URL }}
+          SECRET: ${{ secrets.LOOKGROUND_CRON_SECRET }}
+        run: |
+          set -eu
+          if [ -z "${BASE:-}" ]; then
+            echo "Set LOOKGROUND_PUBLIC_URL secret to https://lookgroundslfa.vercel.app"
+            exit 0
+          fi
+          HDR=()
+          if [ -n "${SECRET:-}" ]; then
+            HDR=(-H "x-cron-secret: ${SECRET}")
+          fi
+          curl -fsS "${HDR[@]}" "${BASE}/api/cron/weather" || true
+          curl -fsS "${HDR[@]}" "${BASE}/api/cron/ops" || true
